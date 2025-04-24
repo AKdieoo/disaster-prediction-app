@@ -7,7 +7,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 
 # Load dataset
-data = pd.read_csv(r'C:\Users\13lax\OneDrive\Desktop\disater\disaster_data.csv')  # Replace with your real dataset file path
+data = pd.read_csv('disaster_data.csv')  # Assuming the file is in the same directory as your Python script
 
 # --- Step 1: Select Features and Labels ---
 features = data[['Rainfall', 'SoilMoisture', 'Slope', 'VegetationIndex', 'DistanceToRiver']]
