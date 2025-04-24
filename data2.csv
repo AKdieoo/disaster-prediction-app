@@ -1,0 +1,6 @@
+Rainfall,SoilMoisture,Slope,VegetationIndex,DistanceToRiver,Flood,Landslide
+130,38,16,0.7,520,1,1
+90,28,12,0.6,850,0,0
+105,32,18,0.5,670,1,0
+70,20,10,0.75,950,0,0
+160,50,27,0.4,290,1,1
