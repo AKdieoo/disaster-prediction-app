@@ -1,21 +1,36 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 
-st.set_page_config(page_title="Disaster Prediction App", layout="wide")
-st.title("🌧️🌋 Disaster Prediction System")
+st.title("Disaster Prediction App")
 
-# --- Load Dataset ---
-st.subheader("Uploaded Dataset")
+# List of dataset files
+dataset_files = [
+    'data1.csv',
+    'data2.csv',
+    'data3.csv',
+    'data4.csv'
+]
 
-uploaded_file = st.file_uploader("Upload disaster_data.csv", type="csv")
-if uploaded_file is not None:
-    data = pd.read_csv(uploaded_file)
-    st.write(data)
+def evaluate_and_plot(X, y, model, label_title):
+    y_pred = model.predict(X)
+    cm = confusion_matrix(y, y_pred)
+    report = classification_report(y, y_pred, output_dict=True)
+
+    fig, ax = plt.subplots()
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
+    ax.set_title(f'{label_title} Confusion Matrix')
+    ax.set_xlabel('Predicted')
+    ax.set_ylabel('Actual')
+    return fig
+
+for i, file in enumerate(dataset_files):
+    st.header(f"Dataset {i+1}")
+    data = pd.read_csv(file)
 
     features = data[['Rainfall', 'SoilMoisture', 'Slope', 'VegetationIndex', 'DistanceToRiver']]
     flood_labels = data['Flood']
@@ -25,63 +40,16 @@ if uploaded_file is not None:
         features, flood_labels, landslide_labels, test_size=0.3, random_state=42
     )
 
-    # --- Train Models ---
+    # Train flood model
     flood_model = RandomForestClassifier(n_estimators=100, random_state=42)
     flood_model.fit(X_train, yf_train)
+    flood_fig = evaluate_and_plot(X_test, yf_test, flood_model, f'Dataset {i+1} - Flood')
+    st.pyplot(flood_fig)
 
+    # Train landslide model
     landslide_model = RandomForestClassifier(n_estimators=100, random_state=42)
     landslide_model.fit(X_train, yl_train)
+    landslide_fig = evaluate_and_plot(X_test, yl_test, landslide_model, f'Dataset {i+1} - Landslide')
+    st.pyplot(landslide_fig)
 
-    # --- Prediction Samples ---
-    st.subheader("Flood Prediction Samples")
-    for i in range(min(4, len(X_test))):
-        sample = X_test.iloc[i:i+1]
-        actual = yf_test.iloc[i]
-        pred = flood_model.predict(sample)[0]
-
-        st.markdown(f"**Sample {i+1}**")
-        st.write("Features:", sample)
-
-        fig, ax = plt.subplots()
-        ax.bar(["Actual", "Predicted"], [actual, pred], color=['green', 'blue'])
-        ax.set_ylim(0, 1.1)
-        st.pyplot(fig)
-
-    st.subheader("Landslide Prediction Samples")
-    for i in range(min(4, len(X_test))):
-        sample = X_test.iloc[i:i+1]
-        actual = yl_test.iloc[i]
-        pred = landslide_model.predict(sample)[0]
-
-        st.markdown(f"**Sample {i+1}**")
-        st.write("Features:", sample)
-
-        fig, ax = plt.subplots()
-        ax.bar(["Actual", "Predicted"], [actual, pred], color=['purple', 'orange'])
-        ax.set_ylim(0, 1.1)
-        st.pyplot(fig)
-
-    # --- Feature Importance ---
-    st.subheader("Feature Importance")
-    importance_flood = flood_model.feature_importances_
-    importance_landslide = landslide_model.feature_importances_
-
-    flood_imp_df = pd.DataFrame({"Feature": features.columns, "Importance": importance_flood})
-    landslide_imp_df = pd.DataFrame({"Feature": features.columns, "Importance": importance_landslide})
-
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("Flood Model Importance")
-        fig1 = plt.figure()
-        sns.barplot(x="Importance", y="Feature", data=flood_imp_df.sort_values(by="Importance", ascending=False))
-        st.pyplot(fig1)
-
-    with col2:
-        st.write("Landslide Model Importance")
-        fig2 = plt.figure()
-        sns.barplot(x="Importance", y="Feature", data=landslide_imp_df.sort_values(by="Importance", ascending=False))
-        st.pyplot(fig2)
-
-else:
-    st.warning("Please upload a CSV file with the required format.")
 
